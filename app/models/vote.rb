@@ -2,16 +2,6 @@ class Vote < ActiveRecord::Base
   belongs_to :user
   belongs_to :story
 
-  STORY_REASONS = {
-    "O" => "Off-topic",
-    "Q" => "Low Quality",
-    "A" => "Already Posted",
-    "T" => "Poorly Tagged",
-    "L" => "Poorly Titled",
-    "S" => "Spam",
-    "" => "Cancel",
-  }
-
   COMMENT_REASONS = {
     "O" => "Off-topic",
     "I" => "Incorrect",
@@ -19,6 +9,18 @@ class Vote < ActiveRecord::Base
     "T" => "Troll",
     "S" => "Spam",
     "" => "Cancel",
+  }
+
+  STORY_REASONS = {
+    "O" => "Off-topic",
+    "A" => "Already Posted",
+    "T" => "Poorly Tagged",
+    "L" => "Poorly Titled",
+    "S" => "Spam",
+    "" => "Cancel",
+  }
+  OLD_STORY_REASONS = {
+    "Q" => "Low Quality",
   }
 
   def self.votes_by_user_for_stories_hash(user, stories)
@@ -93,7 +95,7 @@ class Vote < ActiveRecord::Base
     v = Vote.where(:user_id => user_id, :story_id => story_id,
       :comment_id => comment_id).first_or_initialize
 
-    if !v.new_record? && v.vote == vote
+    if !v.new_record? && v.vote == vote && vote != 0
       return
     end
 
@@ -102,34 +104,21 @@ class Vote < ActiveRecord::Base
 
     Vote.transaction do
       # unvote
-      if vote == 0
-        if !v.new_record?
-          if v.vote == -1
-            downvote = -1
-          else
-            upvote = -1
-          end
-        end
-
-        v.destroy
+      if vote == 0 && reason == nil
+        # neutralize previous vote
+        upvote = (v.vote == 1 ? -1 : 0)
+        downvote = (v.vote == -1 ? -1 : 0)
+        v.destroy!
 
       # new vote or change vote
       else
-        if v.new_record?
-          if vote == -1
-            downvote = 1
-          else
-            upvote = 1
-          end
-        elsif v.vote == -1
-          # changing downvote to upvote
-          downvote = -1
-          upvote = 1
-        elsif v.vote == 1
-          # changing upvote to downvote
-          upvote = -1
-          downvote = 1
+        if !v.new_record?
+          upvote = (v.vote == 1 ? -1 : 0)
+          downvote = (v.vote == -1 ? -1 : 0)
         end
+
+        upvote += (vote == 1 ? 1 : 0)
+        downvote += (vote == -1 ? 1 : 0)
 
         v.vote = vote
         v.reason = reason

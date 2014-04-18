@@ -1,6 +1,6 @@
 class StoriesController < ApplicationController
   before_filter :require_logged_in_user_or_400,
-    :only => [ :upvote, :downvote, :unvote, :preview ]
+    :only => [ :upvote, :downvote, :unvote, :hide, :unhide, :preview ]
 
   before_filter :require_logged_in_user, :only => [ :destroy, :create, :edit,
     :fetch_url_title, :new ]
@@ -19,9 +19,6 @@ class StoriesController < ApplicationController
 
     if @story.valid? && !(@story.already_posted_story && !@story.seen_previous)
       if @story.save
-       Vote.vote_thusly_on_story_or_comment_for_user_because(1, @story.id,
-          nil, @user.id, nil)
-
         Countinual.count!("#{Rails.application.shortname}.stories.submitted",
           "+1")
 
@@ -39,7 +36,7 @@ class StoriesController < ApplicationController
     end
 
     @story.is_expired = true
-    @story.editor_user_id = @user.id
+    @story.editor = @user
 
     if params[:reason].present? && @story.user_id != @user.id
       @story.moderation_reason = params[:reason]
@@ -62,6 +59,10 @@ class StoriesController < ApplicationController
     end
 
     @title = "Edit Story"
+
+    if @story.merged_into_story
+      @story.merge_story_short_id = @story.merged_into_story.short_id
+    end
   end
 
   def fetch_url_title
@@ -120,6 +121,11 @@ class StoriesController < ApplicationController
   def show
     @story = Story.where(:short_id => params[:id]).first!
 
+    if @story.merged_into_story
+      flash[:success] = "\"#{@story.title}\" has been merged into this story."
+      return redirect_to @story.merged_into_story.comments_url
+    end
+
     if @story.can_be_seen_by_user?(@user)
       @title = @story.title
     else
@@ -128,7 +134,8 @@ class StoriesController < ApplicationController
 
     @short_url = @story.short_id_url
 
-    @comments = @story.comments.includes(:user).arrange_for_user(@user)
+    @comments = @story.merged_comments.includes(:user,
+      :story).arrange_for_user(@user)
 
     if params[:comment_short_id]
       @comments.each do |c,x|
@@ -161,7 +168,7 @@ class StoriesController < ApplicationController
     end
 
     @story.is_expired = false
-    @story.editor_user_id = @user.id
+    @story.editor = @user
     @story.save(:validate => false)
 
     @story.create_action
@@ -176,7 +183,7 @@ class StoriesController < ApplicationController
     end
 
     @story.is_expired = false
-    @story.editor_user_id = @user.id
+    @story.editor = @user
 
     if @story.url_is_editable_by_user?(@user)
       @story.attributes = story_params
@@ -240,18 +247,40 @@ class StoriesController < ApplicationController
     render :text => @user.reload.balance
   end
 
+  def hide
+    if !(story = find_story)
+      return render :text => "can't find story", :status => 400
+    end
+
+    Vote.vote_thusly_on_story_or_comment_for_user_because(0, story.id,
+      nil, @user.id, "H")
+
+    render :text => "ok"
+  end
+
+  def unhide
+    if !(story = find_story)
+      return render :text => "can't find story", :status => 400
+    end
+
+    Vote.vote_thusly_on_story_or_comment_for_user_because(0, story.id,
+      nil, @user.id, nil)
+
+    render :text => "ok"
+  end
+
 private
 
   def story_params
     p = params.require(:story).permit(
       :title, :url, :description, :moderation_reason, :seen_previous,
-      :tags_a => [],
+      :merge_story_short_id, :tags_a => [],
     )
 
     if @user.is_moderator?
       p
     else
-      p.except(:moderation_reason)
+      p.except(:moderation_reason, :merge_story_short_id)
     end
   end
 

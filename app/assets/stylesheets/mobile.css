@@ -8,11 +8,15 @@
 		padding: 0;
 	}
 
-	div#header {
+	div#header,
+	div#leader {
 		margin: 0;
 		padding: 8px 5px;
 		background-color: #eee;
 		border-bottom: 1px solid #ccc;
+	}
+	div#leader {
+		padding: 8px;
 	}
 
 	div#wrapper {
@@ -49,6 +53,10 @@
 		margin: 0 8px;
 	}
 
+	div.legend {
+		margin-top: 0.5em;
+	}
+
 	ol.comments {
 		margin-left: 10px;
 	}
@@ -58,9 +66,9 @@
 	}
 
 	div.voters {
-		width: 31px;
-		margin-top: 0px;
 		margin-left: 0.25em;
+		margin-top: 0px;
+		width: 31px;
 	}
 	div.voters a.upvoter {
 		margin-top: -5px;

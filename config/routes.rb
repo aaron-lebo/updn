@@ -14,6 +14,13 @@ Lobsters::Application.routes.draw do
     get "/newest/:user/page/:page" => "home#newest_by_user"
     get "/recent" => "home#recent"
     get "/recent/page/:page" => "home#recent"
+    get "/hidden" => "home#hidden"
+    get "/hidden/page/:page" => "home#hidden"
+
+    get "/top" => "home#top"
+    get "/top/page/:page" => "home#top"
+    get "/top/:length" => "home#top"
+    get "/top/:length/page/:page" => "home#top"
 
     get "/threads" => "comments#threads"
     get "/threads/:user" => "comments#threads"
@@ -45,6 +52,8 @@ Lobsters::Application.routes.draw do
       post "downvote"
       post "unvote"
       post "undelete"
+      post "hide"
+      post "unhide"
     end
     post "/stories/fetch_url_title", :format => "json"
     post "/stories/preview" => "stories#preview"

@@ -1,5 +1,11 @@
 class Story < ActiveRecord::Base
   belongs_to :user
+  belongs_to :merged_into_story,
+    :class_name => "Story",
+    :foreign_key => "merged_story_id"
+  has_many :merged_stories,
+    :class_name => "Story",
+    :foreign_key => "merged_story_id"
   has_many :taggings,
     :autosave => true
   has_many :comments,
@@ -8,6 +14,8 @@ class Story < ActiveRecord::Base
   has_many :tips, -> {where('anonymous is not null').order('id desc')}, 
     class_name: 'Action' 
 
+  scope :unmerged, -> { where(:merged_story_id => nil) }
+
   validates_length_of :title, :in => 3..150
   validates_length_of :description, :maximum => (64 * 1024)
   validates_presence_of :user_id
@@ -15,19 +23,20 @@ class Story < ActiveRecord::Base
   DOWNVOTABLE_DAYS = 14
 
   # after this many minutes old, a story cannot be edited
-  MAX_EDIT_MINS = 30
+  MAX_EDIT_MINS = 90
 
   # days a story is considered recent, for resubmitting
   RECENT_DAYS = 30
 
   attr_accessor :vote, :already_posted_story, :fetched_content, :previewing,
     :seen_previous
-  attr_accessor :editor_user_id, :moderation_reason
+  attr_accessor :editor, :moderation_reason, :merge_story_short_id
 
-  before_validation :assign_short_id,
+  before_validation :assign_short_id_and_upvote,
     :on => :create
   before_save :log_moderation
-  after_create :mark_submitter, :create_action
+  after_create :mark_submitter, :record_initial_upvote, :create_action
+  after_save :update_merged_into_story_comments
 
   validate do
     if self.url.present?
@@ -76,13 +85,7 @@ class Story < ActiveRecord::Base
     end
     urls = urls2.clone
 
-    conds = [ "" ]
-    urls.uniq.each_with_index do |u,x|
-      conds[0] << (x == 0 ? "" : " OR ") << "url = ?"
-      conds.push u
-    end
-
-    if s = Story.where(*conds).order("id DESC").first
+    if s = Story.where(:url => urls, :is_expired => false).order("id DESC").first
       return s
     end
 
@@ -107,6 +110,7 @@ class Story < ActiveRecord::Base
     h[:description] = markeddown_description
     h[:comments_url] = comments_url
     h[:submitter_user] = user
+    h[:tags] = self.tags.map{|t| t.tag }.sort
 
     if options && options[:with_comments]
       h[:comments] = options[:with_comments]
@@ -115,8 +119,9 @@ class Story < ActiveRecord::Base
     h
   end
 
-  def assign_short_id
+  def assign_short_id_and_upvote
     self.short_id = ShortId.new(self.class).generate
+    self.upvotes = 1
   end
 
   def calculated_hotness
@@ -131,7 +136,7 @@ class Story < ActiveRecord::Base
     end
 
     # TODO: as the site grows, shrink this down to 12 or so.
-    window = 60 * 60 * 36
+    window = 60 * 60 * 24
 
     return -((order * sign) + (self.created_at.to_f / window)).round(7)
   end
@@ -147,13 +152,15 @@ class Story < ActiveRecord::Base
   # this has to happen just before save rather than in tags_a= because we need
   # to have a valid user_id
   def check_tags
+    u = self.editor || self.user
+
     self.taggings.each do |t|
-      if !t.tag.valid_for?(self.user)
-        raise "#{self.user.username} does not have permission to use " <<
-          "privileged tag #{t.tag.tag}"
+      if !t.tag.valid_for?(u)
+        raise "#{u.username} does not have permission to use privileged " <<
+          "tag #{t.tag.tag}"
       elsif t.tag.inactive? && !t.new_record?
         # stories can have inactive tags as long as they existed before
-        raise "#{self.user.username} cannot add inactive tag #{t.tag.tag}"
+        raise "#{u.username} cannot add inactive tag #{t.tag.tag}"
       end
     end
 
@@ -227,6 +234,11 @@ class Story < ActiveRecord::Base
       "hotness = '#{self.calculated_hotness}' WHERE id = #{self.id.to_i}")
   end
 
+  def hider_count
+    @hider_count ||= Vote.where(:story_id => self.id, :comment_id => nil,
+      :vote => 0).count
+  end
+
   def is_downvotable?
     if self.created_at
       Time.now - self.created_at <= DOWNVOTABLE_DAYS.days
@@ -268,15 +280,14 @@ class Story < ActiveRecord::Base
   end
 
   def log_moderation
-    if self.new_record? || !self.editor_user_id ||
-    self.editor_user_id == self.user_id
+    if self.new_record? || !self.editor || self.editor.id == self.user_id
       return
     end
 
     all_changes = self.changes.merge(self.tagging_changes)
 
     m = Moderation.new
-    m.moderator_user_id = self.editor_user_id
+    m.moderator_user_id = self.editor.try(:id)
     m.story_id = self.id
 
     if all_changes["is_expired"] && self.is_expired?
@@ -284,8 +295,18 @@ class Story < ActiveRecord::Base
     elsif all_changes["is_expired"] && !self.is_expired?
       m.action = "undeleted story"
     else
-      m.action = all_changes.map{|k,v| "changed #{k} from #{v[0].inspect} " <<
-        "to #{v[1].inspect}" }.join(", ")
+      m.action = all_changes.map{|k,v|
+        if k == "merged_story_id"
+          if v[1]
+            "merged into #{self.merged_into_story.short_id} " <<
+              "(#{self.merged_into_story.title})"
+          else
+            "unmerged from another story"
+          end
+        else
+          "changed #{k} from #{v[0].inspect} to #{v[1].inspect}"
+        end
+      }.join(", ")
     end
 
     m.reason = self.moderation_reason
@@ -302,8 +323,29 @@ class Story < ActiveRecord::Base
     Keystore.increment_value_for("user:#{self.user_id}:stories_submitted")
   end
 
+  def merge_into_story!(story)
+    self.merged_story_id = story.id
+    self.save!
+  end
+
+  def merged_comments
+    # TODO: make this a normal has_many?
+    Comment.where(:story_id => Story.select(:id).
+      where(:merged_story_id => self.id) + [ self.id ])
+  end
+
+  def merge_story_short_id=(sid)
+    self.merged_story_id = sid.present??
+      Story.where(:short_id => sid).first.id : nil
+  end
+
   def recalculate_hotness!
     update_column :hotness, calculated_hotness
+  end
+
+  def record_initial_upvote
+    Vote.vote_thusly_on_story_or_comment_for_user_because(1, self.id, nil,
+      self.user_id, nil, false)
   end
 
   def short_id_url
@@ -370,10 +412,16 @@ class Story < ActiveRecord::Base
   end
 
   def update_comments_count!
-    comments = self.comments.arrange_for_user(nil)
+    comments = self.merged_comments.arrange_for_user(nil)
 
     # calculate count after removing deleted comments and threads
     self.update_column :comments_count, comments.count{|c| !c.is_gone? }
+  end
+
+  def update_merged_into_story_comments
+    if self.merged_into_story
+      self.merged_into_story.update_comments_count!
+    end
   end
 
   def url=(u)
@@ -406,7 +454,7 @@ class Story < ActiveRecord::Base
   def vote_summary_for(user)
     r_counts = {}
     r_whos = {}
-    Vote.where(:story_id => self.id, :comment_id => nil).each do |v|
+    Vote.where(:story_id => self.id, :comment_id => nil).where("vote != 0").each do |v|
       r_counts[v.reason.to_s] ||= 0
       r_counts[v.reason.to_s] += v.vote
       if user && user.is_moderator?
@@ -419,7 +467,8 @@ class Story < ActiveRecord::Base
       if k == ""
         "+#{r_counts[k]}"
       else
-        "#{r_counts[k]} #{Vote::STORY_REASONS[k]}" +
+        "#{r_counts[k]} " +
+          (Vote::STORY_REASONS[k] || Vote::OLD_STORY_REASONS[k] || k) +
           (user && user.is_moderator?? " (#{r_whos[k].join(", ")})" : "")
       end
     }.join(", ")

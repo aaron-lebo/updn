@@ -10,12 +10,30 @@ class HomeController < ApplicationController
   # for rss feeds, load the user's tag filters if a token is passed
   before_filter :find_user_from_rss_token, :only => [ :index, :newest ]
 
-  def index
-    @stories = find_stories
+  def about
+    begin
+      render :action => "about"
+    rescue
+      render :text => "<div class=\"box wide\">" <<
+        "A mystery." <<
+        "</div>", :layout => "application"
+    end
+  end
 
-    @rss_link ||= "<link rel=\"alternate\" type=\"application/rss+xml\" " <<
-      "title=\"RSS 2.0\" href=\"/rss" <<
-      (@user ? "?token=#{@user.rss_token}" : "") << "\" />"
+  def hidden
+    @stories = find_stories({ :hidden => true })
+
+    @heading = @title = "Hidden Stories"
+    @cur_url = "/hidden"
+
+    render :action => "index"
+  end
+
+  def index
+    @stories = find_stories({ :hottest => true })
+
+    @rss_link ||= { :title => "RSS 2.0",
+      :href => "/rss#{@user ? "?token=#{@user.rss_token}" : ""}" }
 
     @heading = @title = ""
     @cur_url = "/"
@@ -38,11 +56,9 @@ class HomeController < ApplicationController
 
     @heading = @title = "Newest Stories"
     @cur_url = "/newest"
-    @newest = true
 
-    @rss_link = "<link rel=\"alternate\" type=\"application/rss+xml\" " <<
-      "title=\"RSS 2.0 - Newest Items\" href=\"/newest.rss" <<
-      (@user ? "?token=#{@user.rss_token}" : "") << "\" />"
+    @rss_link = { :title => "RSS 2.0 - Newest Items",
+      :href => "/newest.rss#{@user ? "?token=#{@user.rss_token}" : ""}" }
 
     respond_to do |format|
       format.html { render :action => "index" }
@@ -71,12 +87,25 @@ class HomeController < ApplicationController
     render :action => "index"
   end
 
+  def privacy
+    begin
+      render :action => "privacy"
+    rescue
+      render :text => "<div class=\"box wide\">" <<
+        "You apparently have no privacy." <<
+        "</div>", :layout => "application"
+    end
+  end
+
   def recent
     @stories = find_stories({ :recent => true })
 
     @heading = @title = "Recent Stories"
     @cur_url = "/recent"
-    @recent = true
+
+    # our content changes every page load, so point at /newest.rss to be stable
+    @rss_link = { :title => "RSS 2.0 - Newest Items",
+      :href => "/newest.rss#{@user ? "?token=#{@user.rss_token}" : ""}" }
 
     render :action => "index"
   end
@@ -89,10 +118,8 @@ class HomeController < ApplicationController
     @heading = @title = @tag.description.blank?? @tag.tag : @tag.description
     @cur_url = tag_url(@tag.tag)
 
-    @rss_link = "<link rel=\"alternate\" type=\"application/rss+xml\" " <<
-      "title=\"RSS 2.0 - Tagged #{CGI.escape(@tag.tag)} " <<
-      "(#{CGI.escape(@tag.description.to_s)})\" href=\"/t/" +
-      "#{CGI.escape(@tag.tag)}.rss\" />"
+    @rss_link = { :title => "RSS 2.0 - Tagged #{@tag.tag} (#{@tag.description})",
+      :href => "/t/#{@tag.tag}.rss" }
 
     respond_to do |format|
       format.html { render :action => "index" }
@@ -100,24 +127,28 @@ class HomeController < ApplicationController
     end
   end
 
-  def privacy
-    begin
-      render :action => "privacy"
-    rescue
-      render :text => "<div class=\"box wide\">" <<
-        "You apparently have no privacy." <<
-        "</div>", :layout => "application"
-    end
-  end
+  TOP_INTVS = { "d" => "Day", "w" => "Week", "m" => "Month", "y" => "Year" }
+  def top
+    @cur_url = "/top"
+    length = { :dur => 1, :intv => "Week" }
 
-  def about
-    begin
-      render :action => "about"
-    rescue
-      render :text => "<div class=\"box wide\">" <<
-        "A mystery." <<
-        "</div>", :layout => "application"
+    if m = params[:length].to_s.match(/\A(\d+)([#{TOP_INTVS.keys.join}])\z/)
+      length[:dur] = m[1].to_i
+      length[:intv] = TOP_INTVS[m[2]]
+
+      @cur_url << "/#{params[:length]}"
     end
+
+    @stories = find_stories({ :top => true, :length => length })
+
+    if length[:dur] > 1
+      @heading = @title = "Top Stories of the Past #{length[:dur]} " <<
+        length[:intv] << "s"
+    else
+      @heading = @title = "Top Stories of the Past " << length[:intv]
+    end
+
+    render :action => "index"
   end
 
 private
@@ -143,30 +174,29 @@ private
   end
 
   def _find_stories(how)
-    stories = Story.where(:is_expired => false)
+    stories = Story.unmerged.where(:is_expired => false)
 
-    if @user && !(how[:newest] || how[:by_user])
-      # exclude downvoted items
-      stories = stories.where(
-        Story.arel_table[:id].not_in(
-          Vote.arel_table.where(
-            Vote.arel_table[:user_id].eq(@user.id)
-          ).where(
-            Vote.arel_table[:vote].lt(0)
-          ).where(
-            Vote.arel_table[:comment_id].eq(nil)
-          ).project(
-            Vote.arel_table[:story_id]
-          )
-        )
+    if @user
+      hidden_arel = Vote.arel_table.where(
+        Vote.arel_table[:user_id].eq(@user.id)
+      ).where(
+        Vote.arel_table[:vote].lteq(0)
+      ).where(
+        Vote.arel_table[:comment_id].eq(nil)
+      ).project(
+        Vote.arel_table[:story_id]
       )
+
+      if how[:hidden]
+        stories = stories.where(Story.arel_table[:id].in(hidden_arel))
+      elsif !how[:by_user]
+        stories = stories.where(Story.arel_table[:id].not_in(hidden_arel))
+      end
     end
 
-    filtered_tag_ids = []
-    if @user
-      filtered_tag_ids = @user.tag_filters.map{|tf| tf.tag_id }
-    else
-      filtered_tag_ids = tags_filtered_by_cookie.map{|t| t.id }
+    if how[:tag] || how[:hottest]
+      stories = stories.where("(CAST(upvotes AS integer) - " <<
+        "CAST(downvotes AS integer)) >= -2")
     end
 
     if how[:tag]
@@ -181,16 +211,25 @@ private
       )
     elsif how[:by_user]
       stories = stories.where(:user_id => how[:by_user].id)
-    elsif filtered_tag_ids.any?
-      stories = stories.where(
-        Story.arel_table[:id].not_in(
-          Tagging.arel_table.where(
-            Tagging.arel_table[:tag_id].in(filtered_tag_ids)
-          ).project(
-            Tagging.arel_table[:story_id]
+    else
+      filtered_tag_ids = []
+      if @user
+        filtered_tag_ids = @user.tag_filters.map{|tf| tf.tag_id }
+      else
+        filtered_tag_ids = tags_filtered_by_cookie.map{|t| t.id }
+      end
+
+      if filtered_tag_ids.any?
+        stories = stories.where(
+          Story.arel_table[:id].not_in(
+            Tagging.arel_table.where(
+              Tagging.arel_table[:tag_id].in(filtered_tag_ids)
+            ).project(
+              Tagging.arel_table[:story_id]
+            )
           )
         )
-      )
+      end
     end
 
     if how[:recent] && how[:page] == 1
@@ -221,6 +260,16 @@ private
           break
         end
       end
+    elsif how[:top] && how[:length]
+      stories = stories.where("created_at >= (NOW() - INTERVAL " <<
+        "#{how[:length][:dur]} #{how[:length][:intv].upcase})")
+    end
+
+    order = "hotness"
+    if how[:newest] || how[:recent]
+      order = "stories.created_at DESC"
+    elsif how[:top]
+      order = "(CAST(upvotes AS integer) - CAST(downvotes AS integer)) DESC"
     end
 
     stories = stories.includes(
@@ -230,7 +279,7 @@ private
     ).offset(
       (how[:page] - 1) * STORIES_PER_PAGE
     ).order(
-      (how[:newest] || how[:recent]) ? "stories.created_at DESC" : "hotness"
+      order
     ).to_a
 
     show_more = false

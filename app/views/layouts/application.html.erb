@@ -25,16 +25,18 @@
   <% end %>
   <%= csrf_meta_tags %>
   <% if @rss_link %>
-    <%= raw(@rss_link) %>
+    <link rel="alternate" type="application/rss+xml"
+      title="<%= @rss_link[:title] %>" href="<%= @rss_link[:href] %>" />
   <% end %>
 </head>
 <body>
   <div id="wrapper">
     <div id="header">
       <div class="inside">
-        <div id="headerleft">
+      	<div id="headerleft">
           <% links = {
-            "/newest" => "Newest",
+            "/" => "Home",
+            "/recent" => "Recent",
             "/comments" => "Comments"
           } %>
 
@@ -45,12 +47,14 @@
 
           <% links.merge!({ "/search" => "Search" }) %>
 
-         <span class="headerlinks">
-            <a href="/" style="font-weight: bold; color: <%= color %>"><%= Rails.application.name %></a>
-            <% if @cur_url.present? && !links.keys.include?(@cur_url) &&
-            @heading.present? %>
+          <% if @cur_url.present? && !links.keys.include?(@cur_url) &&
+          @heading.present? %>
+            <span id="headertitle">
               <a href="<%= @cur_url %>"><%= @heading %></a>
-            <% end %>
+            </span>
+          <% end %>
+
+          <span class="headerlinks">
             <% links.each do |u,v| %>
               <a href="<%= u %>" <%= u == @cur_url ? raw("class=\"cur_url\"") :
                 "" %>><%= v %></a>
