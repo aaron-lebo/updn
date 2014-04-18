@@ -83,5 +83,5 @@ class ApplicationController < ActionController::Base
     if !@user && request[:format] == "rss" && params[:token].to_s.present?
       @user = User.where(:rss_token => params[:token].to_s).first
     end
-  end
+  end  
 end

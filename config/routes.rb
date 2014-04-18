@@ -1,5 +1,5 @@
 Lobsters::Application.routes.draw do
-  scope :format => "html" do
+ scope :format => "html" do
     root :to => "home#index",
       :protocol => (Rails.env == "production" ? "https://" : "http://")
 
@@ -25,6 +25,8 @@ Lobsters::Application.routes.draw do
     get "/signup" => "signup#index"
     post "/signup" => "signup#signup"
     get "/signup/invite" => "signup#invite"
+    get "/register" => "signup#register"
+    post "/register" => "signup#create"
 
     get "/login/forgot_password" => "login#forgot_password",
       :as => "forgot_password"
@@ -68,7 +70,11 @@ Lobsters::Application.routes.draw do
     end
 
     get "/s/:id/:title/comments/:comment_short_id" => "stories#show"
+    get "/s/:id/:title/comments/:comment_short_id/tips" => "tips#item_new"
+    post "/s/:id/:title/comments/:comment_short_id/tips" => "tips#item_create"
     get "/s/:id/(:title)" => "stories#show", :format => /html|json/
+    get "/s/:id/:title/tips" => "tips#item_new"
+    post "/s/:id/:title/tips" => "tips#item_create"
 
     get "/u" => "users#tree"
     get "/u/:username" => "users#show", :as => "user"
@@ -98,5 +104,13 @@ Lobsters::Application.routes.draw do
 
     get "/privacy" => "home#privacy"
     get "/about" => "home#about"
+
+    get "/balance" => "balance#index"
+    get "/balance/transactions" => "balance#transactions"
+    post "/balance/transactions" => "balance#create"
+
+    get "/has_funds" => "users#has_funds?"
+
+    resources "tips"
   end
 end

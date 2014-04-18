@@ -8,6 +8,8 @@ class StoriesController < ApplicationController
   before_filter :find_user_story, :only => [ :destroy, :edit, :undelete,
     :update ]
 
+  before_filter :check_balance, :only => [ :new, :create, :undelete ]
+
   def create
     @title = "Submit Story"
     @cur_url = "/stories/new"
@@ -17,7 +19,7 @@ class StoriesController < ApplicationController
 
     if @story.valid? && !(@story.already_posted_story && !@story.seen_previous)
       if @story.save
-        Vote.vote_thusly_on_story_or_comment_for_user_because(1, @story.id,
+       Vote.vote_thusly_on_story_or_comment_for_user_because(1, @story.id,
           nil, @user.id, nil)
 
         Countinual.count!("#{Rails.application.shortname}.stories.submitted",
@@ -44,7 +46,12 @@ class StoriesController < ApplicationController
     end
 
     @story.save(:validate => false)
-
+ 
+    unless @user.is_admin? || !@story.new?
+      amount = Action.where(from_id: @user.id, to_id: nil, story_id: @story.id, vote_id: nil).last.amount 
+      Action.new(to: @user, story: @story, amount: amount).save validate: false  
+    end
+    
     redirect_to @story.comments_url
   end
 
@@ -157,6 +164,8 @@ class StoriesController < ApplicationController
     @story.editor_user_id = @user.id
     @story.save(:validate => false)
 
+    @story.create_action
+
     redirect_to @story.comments_url
   end
 
@@ -190,7 +199,7 @@ class StoriesController < ApplicationController
     Vote.vote_thusly_on_story_or_comment_for_user_because(0, story.id,
       nil, @user.id, nil)
 
-    render :text => "ok"
+    render :text => @user.balance
   end
 
   def upvote
@@ -198,10 +207,14 @@ class StoriesController < ApplicationController
       return render :text => "can't find story", :status => 400
     end
 
-    Vote.vote_thusly_on_story_or_comment_for_user_because(1, story.id,
-      nil, @user.id, nil)
+    begin
+      Vote.vote_thusly_on_story_or_comment_for_user_because(1, story.id,
+        nil, @user.id, nil)
+    rescue
+      return render :text => "not enough Bitcoin", :status => 400
+    end
 
-    render :text => "ok"
+    render :text => @user.reload.balance
   end
 
   def downvote
@@ -217,10 +230,14 @@ class StoriesController < ApplicationController
       return render :text => "not permitted to downvote", :status => 400
     end
 
-    Vote.vote_thusly_on_story_or_comment_for_user_because(-1, story.id,
-      nil, @user.id, params[:reason])
+    begin
+      Vote.vote_thusly_on_story_or_comment_for_user_because(-1, story.id,
+        nil, @user.id, params[:reason])
+    rescue
+      return render :text => "not enough Bitcoin", :status => 400
+    end
 
-    render :text => "ok"
+    render :text => @user.reload.balance
   end
 
 private
@@ -263,7 +280,7 @@ private
       return false
     end
   end
-
+  
   def load_user_votes
     if @user
       if v = Vote.where(:user_id => @user.id, :story_id => @story.id,
@@ -279,4 +296,12 @@ private
       end
     end
   end
+
+  def check_balance
+    check = @user.check_balance 0.03 
+    unless check[0]
+      flash[:error] = "Stories cost $0.03 (currently #{check[1]} Bitcoin).<br /><br />Get Bitcoin by making good comments, or make a deposit and check on pending transactions at updoge.io/balance.".html_safe
+      redirect_to '/'
+    end
+  end  
 end

@@ -1,0 +1,94 @@
+<div class="box wide">
+  <%= render 'head' %>
+
+  <div class="legend" style="float: right;">
+    <a href="/balance">View Actions</a>
+  </div>
+  
+   <div class="legend">
+    Create Withdrawal 
+  </div>
+
+  <p>
+    Withdrawals may take up to 3 days to process because your funds are kept off-site to keep them secure. You may be charged up to 0.0001 BTC (the Bitcoin network's transaction fee), but you may be charged less or not at all, depending on pending withdrawals. 
+  </p>
+
+  <%= form_for @tx, url: '/balance/transactions' do |f| %>
+    <%= error_messages_for @tx %>
+    
+    <div class="boxline">
+      <%= f.label :to, "To:", class: "required" %>
+      <%= f.text_field :to, size: 34, autocomplete: "off" %>
+      <span class="hint">
+        receiving Bitcoin address 
+      </span>
+    </div>
+    
+    <div class="boxline">
+      <%= f.label :to_confirmation, "To Confirmation:", class: "required" %>
+      <%= f.text_field :to_confirmation, size: 34, autocomplete: "off" %>
+    </div>
+
+    <div class="boxline">
+      <%= f.label :amount, "Amount:", class: "required" %>
+      <%= f.text_field :amount, style: 20, autocomplete: "off" %>
+      <%= f.select :currency, [:BTC, :USD] %>
+      <span class="hint">
+        max: <%= btc_and_usd @user.balance %> 
+      </span>
+    </div>
+
+    <div class="boxline">
+      <%= f.label :confirm, "Confirm:", class: "required" %>
+      <%= f.check_box :confirm %>
+    </div>
+
+    <div class="boxline">
+      <p></p>
+      <%= submit_tag "Create Withdrawal" %>
+    </div>
+  <% end %>
+  <br />
+
+  <div class="legend">
+    Transactions 
+  </div>
+
+  <p>
+    Deposits require at least 3 confirmations to show up in your balance.
+  </p>
+
+  <% txs = @user.transactions.order '-id' %>
+  <% if txs.any? %>
+    <table class="data zebra" width="100%" cellspacing=0>
+      <tr>
+        <th>Transaction</th>
+        <th>Type</th>
+        <th>To</th>
+        <th>Amount (BTC)</th>
+        <th>Confs.</th>
+        <th>Time</th>
+      </tr>
+      <% txs.each do |tx| %>
+        <tr>
+          <td>
+            <% if tx.txid %>
+              <%= link_to '...', "https://blockchain.info/tx/#{tx.txid}" %>
+            <% end %>
+          </td>
+          <td><%= tx.deposit ? 'deposit' : 'withdrawal' %></td>
+          <td><%= tx.to %></td>
+          <td><%= tx.amount %></td>
+          <td><%= (tx.confirmations && tx.confirmations > 2) ? '>' : '' %><%= tx.confirmations %></td>
+          <td>
+            <% if tx.time %>
+              <%= time_ago_in_words tx.time %> ago
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </table>
+  <% else %>
+    <p>You do not have any transactions.</p>
+  <% end %>  
+</div>

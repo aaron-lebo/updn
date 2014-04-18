@@ -3,6 +3,13 @@
     Submit a Story
   </div>
 
+  <p>
+    Stories cost $0.03 (currently <%= usd_to_btc(0.03).truncate 8  %> Bitcoin). The final cost is determined at the time of submission based on market prices.  
+    <br />
+
+    If you delete the story within a day of submission, you will be refunded. The <a href="">fees</a> page has more information on fees and how they are distributed.
+  </p>
+
   <div id="story_holder">
     <%= form_for @story do |f| %>
       <%= render :partial => "stories/form", :locals => { :story => @story,

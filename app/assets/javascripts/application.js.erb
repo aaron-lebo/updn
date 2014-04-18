@@ -1,8 +1,14 @@
 //= require jquery
 //= require jquery_ujs
 //= require_tree .
+//= require noty/jquery.noty
+//= require noty/layouts/bottomRight
+//= require noty/themes/default
 
 "use strict";
+
+$.noty.defaults.timeout = false; 
+$.noty.defaults.layout = 'bottomRight';
 
 var _Lobsters = Class.extend({
   curUser: null,
@@ -96,48 +102,57 @@ var _Lobsters = Class.extend({
     var score = parseInt(scoreDiv.innerHTML);
     var action = "";
 
-    if (li.hasClass("upvoted") && point > 0) {
-      /* already upvoted, neutralize */
-      li.removeClass("upvoted");
-      score--;
-      action = "unvote";
-    }
-    else if (li.hasClass("downvoted") && point < 0) {
-      /* already downvoted, neutralize */
-      li.removeClass("downvoted");
-      score++;
-      action = "unvote";
-    }
-    else if (point > 0) {
-      if (li.hasClass("downvoted"))
-        /* flip flop */
-        score++;
-
-      li.removeClass("downvoted").addClass("upvoted");
-      score++;
-      action = "upvote";
-    }
-    else if (point < 0) {
-      if (li.hasClass("upvoted"))
-        /* flip flop */
+    $.get('/has_funds')
+    .fail(function (data) {
+      noty({type: 'error', text: 'Votes cost $0.01 (currently ' + data.responseText + ' Bitcoin).<br /><br /> Get Bitcoin by making good comments, or make a deposit and check on pending transactions at updoge.io/balance.'});
+    })
+    .success(function () {
+      if (li.hasClass("upvoted") && point > 0) {
+        /* already upvoted, neutralize */
+        li.removeClass("upvoted");
         score--;
+        action = "unvote";
+      }
+      else if (li.hasClass("downvoted") && point < 0) {
+        /* already downvoted, neutralize */
+        li.removeClass("downvoted");
+        score++;
+        action = "unvote";
+      }
+      else if (point > 0) {
+        if (li.hasClass("downvoted"))
+          /* flip flop */
+          score++;
 
-      li.removeClass("upvoted").addClass("downvoted");
-      score--;
-      action = "downvote";
-    }
+        li.removeClass("downvoted").addClass("upvoted");
+        score++;
+        action = "upvote";
+      }
+      else if (point < 0) {
+        if (li.hasClass("upvoted"))
+          /* flip flop */
+          score--;
 
-    scoreDiv.innerHTML = score;
+        li.removeClass("upvoted").addClass("downvoted");
+        score--;
+        action = "downvote";
+      }
 
-    if (action == "upvote" || action == "unvote")
-      li.find(".reason").html("");
-    else if (action == "downvote" && thingType == "comment")
-      li.find(".reason").html("(" +
-        Lobsters.commentDownvoteReasons[reason].toLowerCase() + ")");
+      scoreDiv.innerHTML = score;
 
-    $.post("/" + (thingType == "story" ? "stories" : thingType + "s") + "/" +
-      li.attr("data-shortid") + "/" +
-      action, { reason: reason });
+      if (action == "upvote" || action == "unvote")
+        li.find(".reason").html("");
+      else if (action == "downvote" && thingType == "comment")
+        li.find(".reason").html("(" +
+          Lobsters.commentDownvoteReasons[reason].toLowerCase() + ")");
+
+      $.post("/" + (thingType == "story" ? "stories" : thingType + "s") + "/" +
+        li.attr("data-shortid") + "/" +
+        action, { reason: reason })
+      .success(function (data) {
+        $('#balance').text(data + ' BTC');
+      });
+    });
   },
 
   postComment: function(form) {

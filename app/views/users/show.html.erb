@@ -11,7 +11,8 @@
     </span>
 
     <% if @user && @showing_user.is_active? %>
-      (<a href="/messages?to=<%= @showing_user.username %>">Send a Message</a>)
+      (<a href="/messages?to=<%= @showing_user.username %>">Send a Message</a> |
+      <a href="/tips/new?to=<%= @showing_user.username %>">Send a Tip</a>)
     <% end %>
   </div>
 
@@ -95,6 +96,12 @@
       @showing_user.comments_posted_count %></a>
   </span>
   <br>
+
+  <% if @showing_user.is_active? %>
+    <label class="required">Bitcoin Address:</label>
+    <span class="n"><%= @showing_user.bitcoin_deposit %></span>
+    <br />
+  <% end %>
 
   <% if @showing_user.is_active? %>
     <label class="required">About:</label>

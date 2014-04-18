@@ -1,0 +1,37 @@
+<div class="legend">
+  Send Tip 
+</div>
+
+<p>
+  Tips have a 2% fee. The <a href="">fees</a> page has more information on fees and how they are distributed.
+</p>
+
+<%= form_for @tip, as: :tip, url: (item ? '.' : '') << '/tips' do |f| %>
+  <%= error_messages_for @tip %>
+  
+  <% unless item %>
+    <div class="boxline">
+      <%= f.label :to_, "To:", class: "required" %>
+      <%= f.text_field :to_, size: 20, autocomplete: "off" %>
+    </div>
+  <% end %>
+
+  <div class="boxline">
+    <%= f.label :amount, "Amount:", class: "required" %>
+    <%= f.text_field :amount, style: 20, autocomplete: "off" %>
+    <%= f.select :currency, [:BTC, :USD] %>
+    <span class="hint">
+      max: <%= btc_and_usd @user.balance %> 
+    </span>
+  </div>
+
+  <div class="boxline">
+    <%= f.label :anonymous, "Anonymous:", class: "required" %>
+    <%= f.check_box :anonymous %>
+  </div>
+
+  <div class="boxline">
+    <p></p>
+    <%= submit_tag "Send Tip" %>
+  </div>
+<% end %>

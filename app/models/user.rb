@@ -19,6 +19,7 @@ class User < ActiveRecord::Base
   belongs_to :banned_by_user,
     :class_name => "User"
   has_many :invitations
+  has_many :transactions
 
   has_secure_password
 
@@ -41,6 +42,7 @@ class User < ActiveRecord::Base
     self.create_rss_token
     self.create_mailing_list_token
   end
+  after_save :create_bitcoin_deposit
 
   BANNED_USERNAMES = [ "admin", "administrator", "hostmaster", "mailer-daemon",
     "postmaster", "root", "security", "support", "webmaster", "moderator",
@@ -133,7 +135,7 @@ class User < ActiveRecord::Base
     end
   end
 
-  def create_rss_token
+ def create_rss_token
     if self.rss_token.blank?
       self.rss_token = Utils.random_str(60)
     end
@@ -246,5 +248,17 @@ class User < ActiveRecord::Base
     Keystore.put("user:#{self.id}:unread_messages",
       Message.where(:recipient_user_id => self.id,
         :has_been_read => false).count)
+  end  
+  
+  def create_bitcoin_deposit
+    if self.bitcoin_deposit.blank?
+      self.bitcoin_deposit = Bitcoin.getaccountaddress self.id.to_s 
+      self.save
+    end
   end
+
+  def check_balance(usd)
+    price = usd_to_btc usd 
+    [self.balance >= price, price]
+  end 
 end

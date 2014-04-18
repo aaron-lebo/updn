@@ -53,7 +53,7 @@ class="story <%= story.vote == 1 ? "upvoted" : (story.vote == -1 ?
             |
             <%= link_to "undelete", story_undelete_url(story.short_id),
               :method => :post, :data => {
-              :confirm => "Are you sure you want to undelete this story?" } %>
+              :confirm => "Are you sure you want to undelete this story?\n\nYou will be charged the price of a new story." } %>
           <% elsif !story.is_gone? %>
             |
             <% if story.user_id != @user.try(:id) &&
@@ -63,7 +63,8 @@ class="story <%= story.vote == 1 ? "upvoted" : (story.vote == -1 ?
             <% else %>
               <%= link_to "delete", story_url(story.short_id),
                 :method => :delete, :data => {
-                :confirm => "Are you sure you want to delete this story?" } %>
+                :confirm => "Are you sure you want to delete this story?" <<
+                (story.new? ? "" : "\n\nYou will not be refunded since it is more than a day old.") } %>
             <% end %>
           <% end %>
         <% end %>
@@ -73,6 +74,15 @@ class="story <%= story.vote == 1 ? "upvoted" : (story.vote == -1 ?
             <a href="<%= story.comments_url %>"><%= story.comments_count == 0 ?
               "discuss" : "#{story.comments_count} comment" <<
               (story.comments_count == 1 ? "" : "s") %></a>
+          </span>
+        <% end %>
+
+        <% if !story.is_gone? && (@user || story.tips_count > 0) %>
+          <span class="tips_label">
+            |
+            <a href="<%= story.comments_url %>/tips"><%= story.tips_count == 0 ?
+              "tip" : "#{story.tips_count} tip" <<
+              (story.tips_count == 1 ? "" : "s") %></a>
           </span>
         <% end %>
 

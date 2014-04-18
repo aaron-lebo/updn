@@ -8,6 +8,9 @@ class Comment < ActiveRecord::Base
     :class_name => "Comment"
   has_one :moderation,
     :class_name => "Moderation"
+  has_many :actions
+  has_many :tips, -> {where('anonymous is not null').order('id desc')}, 
+    class_name: 'Action' 
 
   attr_accessor :current_vote, :previewing, :indent_level, :highlighted
 

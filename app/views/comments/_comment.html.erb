@@ -75,6 +75,13 @@ class="comment <%= comment.current_vote ? (comment.current_vote[:vote] == 1 ?
               %>
           <% end %>
         </span>
+
+        <% if (@user || comment.tips_count > 0) && !comment.story.is_gone? && !comment.is_gone? %>
+            |
+            <a href="<%= comment.url %>/tips"><%= comment.tips_count == 0 ?
+              "tip" : "#{comment.tips_count} tip" <<
+              (comment.tips_count == 1 ? "" : "s") %></a>
+        <% end %>
       <% end %>
 
       <% if defined?(show_story) && show_story %>

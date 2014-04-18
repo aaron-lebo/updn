@@ -127,7 +127,7 @@ class CommentsController < ApplicationController
     Vote.vote_thusly_on_story_or_comment_for_user_because(0, comment.story_id,
       comment.id, @user.id, nil)
 
-    render :text => "ok"
+    render :text => @user.balance_8
   end
 
   def upvote
@@ -135,10 +135,14 @@ class CommentsController < ApplicationController
       return render :text => "can't find comment", :status => 400
     end
 
-    Vote.vote_thusly_on_story_or_comment_for_user_because(1, comment.story_id,
-      comment.id, @user.id, params[:reason])
+    begin
+      Vote.vote_thusly_on_story_or_comment_for_user_because(1, comment.story_id,
+        comment.id, @user.id, params[:reason])
+    rescue
+      return render :text => "not enough Bitcoin", :status => 400
+    end
 
-    render :text => "ok"
+    render :text => @user.reload.balance_8
   end
 
   def downvote
@@ -154,10 +158,14 @@ class CommentsController < ApplicationController
       return render :text => "not permitted to downvote", :status => 400
     end
 
-    Vote.vote_thusly_on_story_or_comment_for_user_because(-1, comment.story_id,
-      comment.id, @user.id, params[:reason])
+    begin
+      Vote.vote_thusly_on_story_or_comment_for_user_because(-1, comment.story_id,
+        comment.id, @user.id, params[:reason])
+    rescue
+      return render :text => "not enough Bitcoin", :status => 400
+    end
 
-    render :text => "ok"
+    render :text => @user.reload.balance_8
   end
 
   def index

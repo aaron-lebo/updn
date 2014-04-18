@@ -1,0 +1,54 @@
+<% if @tip.comment %> 
+  <ol class="comments comments1">
+    <li><%= render "comments/comment", 
+      comment: @item, show_story: true %>
+      <ol class="comments"></ol>
+    </li>
+  </ol>
+<% else %>
+  <ol class="stories">
+    <%= render "stories/listdetail",
+      story: @item, single_story: true %>
+  </ol>
+  <div class="story_content">
+    <% if @item.markeddown_description.present? %>
+      <div class="story_text">
+        <%= raw @item.markeddown_description %>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="box wide">
+  <% if @user %>
+    <%= render "form", :item => @item %>
+    <br />
+  <% end %>
+  
+  <div class="legend">
+    Tips 
+  </div>
+
+  <% if @item.tips.any? %>
+    <table class="data zebra" width="100%" cellspacing=0>
+      <tr>
+        <th>Amount (BTC)</th>
+        <th>From</th>
+        <th>Time</th>
+      </tr>
+      <% @item.tips.each do |tip| %>
+        <tr>
+          <td><%= to_8f tip.amount %></td>
+          <td>
+            <% unless tip.anonymous %>
+              <%= link_to tip.from.username, user_url(tip.from) %>
+            <% end %>
+          </td>
+          <td><%= time_ago_in_words tip.created_at %> ago</td>
+        </tr>
+      <% end %>
+    </table>
+  <% else %>
+    <p>There are no tips for this item.</p>
+  <% end %>
+</div>

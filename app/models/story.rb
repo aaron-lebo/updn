@@ -5,6 +5,8 @@ class Story < ActiveRecord::Base
   has_many :comments,
     :inverse_of => :story
   has_many :tags, :through => :taggings
+  has_many :tips, -> {where('anonymous is not null').order('id desc')}, 
+    class_name: 'Action' 
 
   validates_length_of :title, :in => 3..150
   validates_length_of :description, :maximum => (64 * 1024)
@@ -25,7 +27,7 @@ class Story < ActiveRecord::Base
   before_validation :assign_short_id,
     :on => :create
   before_save :log_moderation
-  after_create :mark_submitter
+  after_create :mark_submitter, :create_action
 
   validate do
     if self.url.present?
@@ -258,7 +260,7 @@ class Story < ActiveRecord::Base
   def is_undeletable_by_user?(user)
     if user && user.is_moderator?
       return true
-    elsif user && user.id == self.user_id && !self.is_moderated?
+    elsif user && user.id == self.user_id && !self.is_moderated? && user.has_funds?(0.02)
       return true
     else
       return false
@@ -421,5 +423,15 @@ class Story < ActiveRecord::Base
           (user && user.is_moderator?? " (#{r_whos[k].join(", ")})" : "")
       end
     }.join(", ")
+  end
+
+  def new?
+    self.created_at <= 1.days.ago
+  end
+  
+  def create_action
+    unless self.user.is_admin?
+      Action.new(from: self.user, story: self, amount: 0.03, currency: 'USD').save validate: false
+    end
   end
 end

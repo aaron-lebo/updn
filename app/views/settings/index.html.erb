@@ -165,6 +165,22 @@
       </span>
     </div>
 
+    <div class="legend">
+      Bitcoin Settings
+    </div>
+
+    <div class="boxline">
+      <label class="required">Deposit Address:</label>
+      <span>
+      <tt><%= @edit_user.bitcoin_deposit %></tt>
+      </span>
+    </div>
+
+    <div class="boxline">
+      <label class="required">Withdrawal Address:</label>
+      <%= f.text_field :bitcoin_withdrawal, :size => 34 %>
+    </div>
+
     <br>
     <%= f.submit "Save All Settings" %>
   <% end %>

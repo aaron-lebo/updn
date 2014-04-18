@@ -79,6 +79,17 @@ class Vote < ActiveRecord::Base
 
   def self.vote_thusly_on_story_or_comment_for_user_because(vote, story_id,
   comment_id, user_id, reason, update_counters = true)
+    from = User.find_by id: user_id 
+    unless from.is_admin?
+      story = Story.find_by id: story_id
+      comment = Comment.find_by id: comment_id 
+      to = (comment || story).user
+      check = from.check_balance 0.01 
+      unless from == to || check[0] 
+        raise
+      end
+    end
+
     v = Vote.where(:user_id => user_id, :story_id => story_id,
       :comment_id => comment_id).first_or_initialize
 
@@ -122,6 +133,11 @@ class Vote < ActiveRecord::Base
 
         v.vote = vote
         v.reason = reason
+ 
+        unless from.is_admin? || from == to || vote == 0
+          Action.new(from: from, to: upvote == 1 ? to : nil, story: story, comment: comment, vote: v, amount: check[1]).save validate: false  
+        end
+
         v.save!
       end
 

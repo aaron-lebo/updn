@@ -54,6 +54,34 @@ class SignupController < ApplicationController
     end
   end
 
+  def register
+    if @user
+      flash[:error] = "You are already signed up."
+      return redirect_to "/"
+    end
+
+    @title = "Register"
+    @new_user = User.new
+  end
+
+  def create
+    @title = "Register"
+
+    @new_user = User.new(user_params)
+
+    if @new_user.save
+      session[:u] = @new_user.session_token
+      flash[:success] = "Welcome to #{Rails.application.name}, " <<
+        "#{@new_user.username}!"
+
+      Countinual.count!("#{Rails.application.shortname}.users.created", "+1")
+
+      return redirect_to "/"
+    else
+      render :action => "register"
+    end
+  end
+
 private
 
   def user_params
