@@ -1,20 +1,20 @@
 class BalanceController < ApplicationController
   before_filter :require_logged_in_user
 
-  def index 
+  def index
     @title = 'Actions | Balance'
     @cur_url = '/balance'
 
-    @actions = Action.where('from_id = ? or to_id = ?', @user.id, @user.id).order 'id desc' 
-  end  
+    @actions = Action.where('from_id = ? or to_id = ?', @user.id, @user.id).order 'id desc'
+  end
 
   def transactions
     @title = 'Transactions | Balance'
     @cur_url = '/balance'
 
     @tx = Transaction.new
-    @tx.to = @user.bitcoin_withdrawal
-  end  
+    @tx.to = @user.withdrawal
+  end
 
   def create
     @title = 'Transactions | Balance'

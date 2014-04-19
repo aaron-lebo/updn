@@ -208,8 +208,8 @@ ActiveRecord::Schema.define(version: 20140408160306) do
     t.string   "banned_reason",        limit: 200
     t.datetime "deleted_at"
     t.string   "pushover_sound"
-    t.string   "bitcoin_deposit"
-    t.string   "bitcoin_withdrawal"
+    t.string   "deposit"
+    t.string   "withdrawal"
     t.decimal  "balance",                               precision: 13, scale: 8, default: 0.0
   end
 

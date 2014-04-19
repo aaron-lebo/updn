@@ -39,7 +39,7 @@ class User < ActiveRecord::Base
   end
 
   before_save :check_session_token
-  after_save :create_bitcoin_deposit
+  after_save :create_deposit
   before_validation :on => :create do
     self.create_rss_token
     self.create_mailing_list_token
@@ -255,17 +255,17 @@ class User < ActiveRecord::Base
     Keystore.put("user:#{self.id}:unread_messages",
       Message.where("recipient_user_id = ? AND (has_been_read = ? AND " <<
       "deleted_by_recipient = ?)", self.id, false, false).count)
-  end  
-  
+  end
+
   def create_bitcoin_deposit
-    if self.bitcoin_deposit.blank?
-      self.bitcoin_deposit = Bitcoin.getaccountaddress self.id.to_s 
+    if self.deposit.blank?
+      self.deposit = Bitcoin.getaccountaddress self.id.to_s
       self.save
     end
   end
 
   def check_balance(usd)
-    price = usd_to_btc usd 
+    price = usd_to_btc usd
     [self.balance >= price, price]
-  end 
+  end
 end
