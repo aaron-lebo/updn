@@ -35,7 +35,6 @@
       <div class="inside">
       	<div id="headerleft">
           <% links = {
-            "/" => "Home",
             "/recent" => "Recent",
             "/comments" => "Comments"
           } %>
@@ -55,6 +54,7 @@
           <% end %>
 
           <span class="headerlinks">
+            <a href="/" style="font-weight: bold; color: <%= color %>"><%= Rails.application.name %></a>
             <% links.each do |u,v| %>
               <a href="<%= u %>" <%= u == @cur_url ? raw("class=\"cur_url\"") :
                 "" %>><%= v %></a>
