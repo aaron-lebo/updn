@@ -81,7 +81,7 @@ This has been tested using Ruby 2.1 on an arch install using sqlite3. It should 
 
 Download Bitcoin or bitcoind, enable the server option, supply rpcuser and rpcpassword in [*bitcoin.conf*](https://en.bitcoin.it/wiki/Running_Bitcoin), and adjust *bitcoin.rb* to match. The entire Bitcoin blockchain can take hours to download. The site should still function as long as the daemon is accessible, you simply will not see the most recent transactions until that part of the blockchain has been downloaded.
 
-Once the Bitcoin daemon is running, follow the setup instructions for Lobtsers below.
+Once the Bitcoin daemon is running, follow the setup instructions for Lobsters below.
 
 ###Lobsters Rails Project
 
