@@ -6,6 +6,8 @@ This project started after someone on [Hacker News](http://news.ycombinator.com)
 
 Reddit-alike where submissions and voting use Bitcoin
 
+Basically, [Lobsters](https://lobste.rs/) codebase + Bitcoin. 
+
 * new stories cost the equivalent of $0.03
 * upvotes/downvotes cost the equivalent of $0.01
 * comments are free
