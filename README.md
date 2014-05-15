@@ -1,6 +1,6 @@
 ###updn
 
-This project started after a comment by someone on [Hacker News](http://news.ycombinator.com) suggesting implementing a Hacker News/Reddit/Digg style site where story submission and voting required Dogecoin. This is my attempt at something similar.
+This project started after someone on [Hacker News](http://news.ycombinator.com) suggested implementing a Hacker News/Reddit/Digg style site where story submission and voting required Dogecoin. This is my attempt at something similar.
 
 ####tldr
 
