@@ -38,7 +38,7 @@
       </tr>
       <% @item.tips.each do |tip| %>
         <tr>
-          <td><%= to_8f tip.amount %></td>
+          <td><%= tip.amount.truncate 8 %></td>
           <td>
             <% unless tip.anonymous %>
               <%= link_to tip.from.username, user_url(tip.from) %>

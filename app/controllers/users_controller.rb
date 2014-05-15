@@ -22,7 +22,7 @@ class UsersController < ApplicationController
   def has_funds? 
     check = @user.check_balance 0.01 
     unless @user.is_admin? || check[0] 
-      return render text: to_8f(check[1]), status: 400
+      return render text: "Votes cost $0.01 (currently #{check[1]} Bitcoin).<br /><br /> Get Bitcoin by making good comments, or make a deposit and check on pending transactions at #{request.host_with_port}/balance.", status: 400
     end
 
     render text: 'ok'

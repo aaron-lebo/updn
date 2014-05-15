@@ -257,7 +257,7 @@ class User < ActiveRecord::Base
       "deleted_by_recipient = ?)", self.id, false, false).count)
   end
 
-  def create_bitcoin_deposit
+  def create_deposit
     if self.deposit.blank?
       self.deposit = Bitcoin.getaccountaddress self.id.to_s
       self.save
@@ -266,6 +266,6 @@ class User < ActiveRecord::Base
 
   def check_balance(usd)
     price = usd_to_btc usd
-    [self.balance >= price, price]
+    [self.balance >= price, price.truncate(8)]
   end
 end

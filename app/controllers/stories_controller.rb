@@ -329,7 +329,7 @@ private
   def check_balance
     check = @user.check_balance 0.03 
     unless check[0]
-      flash[:error] = "Stories cost $0.03 (currently #{check[1]} Bitcoin).<br /><br />Get Bitcoin by making good comments, or make a deposit and check on pending transactions at updoge.io/balance.".html_safe
+      flash[:error] = "Stories cost $0.03 (currently #{check[1]} Bitcoin).<br /><br />Get Bitcoin by making good comments, or make a deposit and check on pending transactions at #{request.host_with_port}/balance.".html_safe
       redirect_to '/'
     end
   end  

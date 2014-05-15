@@ -122,7 +122,7 @@ var _Lobsters = Class.extend({
 
     $.get('/has_funds')
     .fail(function (data) {
-      noty({type: 'error', text: 'Votes cost $0.01 (currently ' + data.responseText + ' Bitcoin).<br /><br /> Get Bitcoin by making good comments, or make a deposit and check on pending transactions at updoge.io/balance.'});
+      noty({type: 'error', text: data.responseText});
     })
     .success(function () {
       if (li.hasClass("upvoted") && point > 0) {
