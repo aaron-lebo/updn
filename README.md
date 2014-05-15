@@ -1,3 +1,43 @@
+###updn
+
+This project started after a comment by someone on [Hacker News](http://news.ycombinator.com) suggesting implementing a Hacker News/Reddit/Digg style site where story submission and voting required Dogecoin. This is my attempt at something similar.
+
+####tldr
+
+Reddit-style site where users must have Bitcoin to submit stories.
+
+* new stories cost the equivalent of $0.03
+* upvotes/downvotes cost the equivalent of $0.01
+* comments are free
+* also, a tipping system is built in where users can send whatever amount they want to each other
+
+The recipient of an upvote receives the equivalent amount of Bitcoin. Ideally, this means that:
+
+1) Story submissions and votes have some cost, and people will be more thoughtful about using either one.
+2) Good content is rewarded. If someone submits a link to their blog post and they receive 700 upvotes, they get the equivalent of about $7.
+3) People can easily be introduced to cryptocurrencies. Instead of buying Bitcoin online/offline or begging somewhere, they can make a comment and receive a small amount if others find it worthwhile.
+4) The site itself can easily be monetized. No ads.
+
+The key is that the cost exists, but it is still small. You could submit 5 stories and give out 15 votes to people and it would only cost about $0.30; not an large amount of money, but enough to weed out junk content.
+
+####rationale
+
+Social news sites are nothing new. Slashdot was probably the father but since then there have been numerous sites including Digg, del.icio.us, Reddit, and Hacker News. The basic idea is simple: users get to to submit and vote on what content they think belongs on the front page. It is democracy in action with all its benefits and flaws. It works pretty well, but there are obvious issues. 
+
+1) Aside from exposure, good content is not actually rewarded monetarily. In fact, the additional traffic might be more expensive than the exposure is worth.
+2) Since submissions and votes do not actually cost anything aside from time, it is easy to flood the system with noise. Additionally, users are careless and thoughtlessly upvote mediocre content or downvote controversial but worthwhile content.
+3) Forum-style sites are notoriously difficult to monetize. 
+
+Can these problems be fixed? If submissions and votes actually have a monetary cost, maybe.
+
+####implementation
+
+How do we easily incorporate money? We could require a credit card but that has a high psychological barrier of entry for a lot of people. Why not use Bitcoin or another cryptocurrency instead? It is ideal for this kind of system; somewhat anonymous and designed for transactions over the internet. Some individuals have already called Dogecoin "the tipping currency of the internet". It and other cryptocurrencies are easy ways to reward people small amounts of money for good content. [/r/dogecoin](http://www.reddit.com/r/dogecoin) in particular is known for users tipping each other for funny and useful comments. But that uses a third-party bot and submissions and story submissions are not affected by this. Let's build similar functionality right into the software instead.
+
+When a user signs up for the site, a Bitcoin address is generated for them. This is their deposit address. In order to fully use the site (submit stories or vote on content), they need to transfer some Bitcoin to it.
+
+Once they do that, they can submit new stories and vote. They can also tip stories, comments, and users directly, if they feel that something or someone deserves a different amount than voting provides. Once they accumulate a decent amount, they can create a withdrawal and have the Bitcoin transfered to an outside address.
+
 ###Lobsters Rails Project
 
 This is the source code to the site operating at
