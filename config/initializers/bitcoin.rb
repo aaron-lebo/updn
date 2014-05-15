@@ -32,7 +32,7 @@ def current_block
 end
 
 def get_check 
-  Check.where.not(value: nil).last || Check.create(current_value: value, current_block: block)
+  Check.where.not(value: nil).last || Check.create(value: current_value, block: current_block)
 end
 
 def usd_to_btc(usd) 
