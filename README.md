@@ -13,10 +13,10 @@ Reddit-style site where users must have Bitcoin to submit stories.
 
 The recipient of an upvote receives the equivalent amount of Bitcoin. Ideally, this means that:
 
-1) Story submissions and votes have some cost, and people will be more thoughtful about using either one.
-2) Good content is rewarded. If someone submits a link to their blog post and they receive 700 upvotes, they get the equivalent of about $7.
-3) People can easily be introduced to cryptocurrencies. Instead of buying Bitcoin online/offline or begging somewhere, they can make a comment and receive a small amount if others find it worthwhile.
-4) The site itself can easily be monetized. No ads.
+1. Story submissions and votes have some cost, and people will be more thoughtful about using either one.
+2. Good content is rewarded. If someone submits a link to their blog post and they receive 700 upvotes, they get the equivalent of about $7.
+3. People can easily be introduced to cryptocurrencies. Instead of buying Bitcoin online/offline or begging somewhere, they can make a comment and receive a small amount if others find it worthwhile.
+4. The site itself can easily be monetized. No ads.
 
 The key is that the cost exists, but it is still small. You could submit 5 stories and give out 15 votes to people and it would only cost about $0.30; not an large amount of money, but enough to weed out junk content.
 
