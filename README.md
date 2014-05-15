@@ -44,7 +44,7 @@ Once they do that, they can submit new stories and vote. They can also tip stori
 
 ####Technical details
 
-The project is based on Joshua Stein's [lobste.rs](https://lobste.rs). It is an open source Rails codebase, which is probably one of the best Reddit-alike projects out there. It includes just about everything you would expect from such a site as well as some features such as tags. The vast majority of this project is due to his work.
+The project is based on Joshua Stein's [lobste.rs](https://lobste.rs), an open source Rails codebase that is probably one of the best Reddit-alikes out there. It includes just about everything you would expect from such a site as well as some features such as tags. The majority of this project is due to his work.
 
 updn is essentially the Lobsters code connected to a [Bitcoin daemon running as a JSON RPC server](https://en.bitcoin.it/wiki/API_reference_(JSON-RPC)). The daemon handles generating new addresses and transfers in and out of the site. 
 
