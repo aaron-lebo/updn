@@ -24,7 +24,7 @@ Of course, that is the ideal scenario. It could just attact people trying to gam
 
 Note: these amounts are not hardwired, just an idea. Lower or higher costs might be better in practice.
 
-####rationale
+####Rationale
 
 Social news sites are nothing new. Slashdot was probably the father but since then there have been numerous sites including Digg, del.icio.us, Reddit, and Hacker News. The basic idea is simple: users get to to submit and vote on what content they think belongs on the front page. It is democracy in action with all its benefits and flaws. It works pretty well, but there are obvious issues. 
 
@@ -34,7 +34,7 @@ Social news sites are nothing new. Slashdot was probably the father but since th
 
 Can these problems be fixed? If submissions and votes actually have a monetary cost, maybe.
 
-####implementation
+####Implementation
 
 How do we easily incorporate money? We could require a credit card but that has a high psychological barrier of entry for a lot of people. Why not use Bitcoin or another cryptocurrency instead? It is ideal for this kind of system; somewhat anonymous and designed for transactions over the internet. Some individuals have already called Dogecoin "the tipping currency of the internet". It and other cryptocurrencies are easy ways to reward people small amounts of money for good content. [/r/dogecoin](http://www.reddit.com/r/dogecoin) in particular is known for users tipping each other for funny and useful comments. However, that uses a third-party bot and submissions and votes are unaffected. Let's build similar functionality right into the software instead.
 
@@ -42,7 +42,7 @@ When a user signs up for the site, a Bitcoin address is generated for them. This
 
 Once they do that, they can submit new stories and vote. They can also tip stories, comments, and users directly, if they feel that something or someone deserves a different amount than voting provides. Once they accumulate a decent amount, they can create a withdrawal and have the Bitcoin transfered to an outside address.
 
-####technical details
+####Technical details
 
 The project is based on Joshua Stein's [lobste.rs](https://lobste.rs). It is an open source Rails codebase, which is probably one of the best Reddit-alike projects out there. It includes just about everything you would expect from such a site as well as some features such as tags. The vast majority of this project is due to his work.
 
@@ -69,13 +69,13 @@ It should be trivial to use a cryptocurrency other than Bitcoin (the initial ide
 2. Get DOGE/BTC value from [Mintpal](http://www.mintpal.com) or [Cryptsy](http://www.cryptsy.com)
 3. DOGE/USD = (BTC/USD) * (DOGE/BTC)
 
-####why aren't you running the site yourself?
+####Why aren't you running the site yourself?
 
 With a few days of testing I could probably host the site myself. However, I do not trust my code enough to do this and I have no desire to spend the time required to run a community based site. Finally, I do not want to be responsible for losing someone else's money due to my own incompetence or a hacker's touch.
 
 Consider the above a warning. If this warning does not phase you, I would love to see someone run with the codebase or the idea.
 
-####installation
+####Installation
 
 This has been tested using Ruby 2.1 on an arch install using sqlite3. It should work fine in other scenarios, but I can't make any promises.
 
