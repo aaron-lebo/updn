@@ -4,7 +4,7 @@ This project started after someone on [Hacker News](http://news.ycombinator.com)
 
 ####tldr
 
-This is a Reddit-style site where users must have Bitcoin to submit stories.
+This is a Reddit-style site where users must have Bitcoin to submit stories and vote.
 
 * new stories cost the equivalent of $0.03
 * upvotes/downvotes cost the equivalent of $0.01
