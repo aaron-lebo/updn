@@ -54,7 +54,7 @@ Each user has *deposit*, *withdrawal*, and *balance* fields. *deposit* and *with
 
 Transfers are represented in two forms, as an *Action* or *Transaction*. Every action internal to the site which represents some transfer of Bitcoin, like submissions, votes, and tips, creates an *Action*. Each deposit and withdrawal to and from the site (an external transfer) is represented as a *Transaction*, which ties pretty closely to actual an Bitcoin transaction.
 
-Note: tips, unlike stories or votes do not have a unique model. Instead, each tip is represented as an *Action* with the *is_anonymous* field set to *true* or *false*. Actions that are not tips simply have *is_anonymous* as *null*. This probably is not the best way to do this, but what the hell. 
+Note: tips, unlike stories or votes do not have a unique model. Instead, each tip is represented as an *Action* with the *anonymous* field set to *true* or *false*. Actions that are not tips simply have *anonymous* as *nil*. This probably is not the best way to do this, but what the hell. 
 
 Most of the magic happens in */config/initializers/bitcoin.rb*. When the server starts, a job is initialized and run every minute. This job has a few important tasks:
 
