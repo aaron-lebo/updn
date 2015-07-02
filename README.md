@@ -83,15 +83,18 @@ This has been tested using Ruby 2.1+ on Arch and LMDE installs using SQLite 3. I
 
 * Download Bitcoin or bitcoind and enable the server option and supply rpcuser and rpcpassword in [*bitcoin.conf*](https://en.bitcoin.it/wiki/Running_Bitcoin). The entire Bitcoin blockchain can take hours to download. The site should still function as long as the daemon is accessible, you simply will not see the most recent transactions until that part of the blockchain has been downloaded.
 
-* Install Ruby. Supported Ruby versions include 1.9.3, 2.0.0 and 2.1.0.
+* Install Ruby as well as other depdendencies. Supported Ruby versions include 1.9.3, 2.0.0 and 2.1.0. On Debian:
+ 
+        sudo apt-get install ruby rubygems ruby-dev libmysqlclient-dev libsqlite3-dev
 
 * Checkout the updn git tree from Github
 
          $ git clone git://github.com/aaron-lebo/updn.git
          $ cd updn
 
-* Run Bundler to install/bundle gems needed by the project:
+* Install/run Bundler to install/bundle gems needed by the project:
 
+         updn$ sudo gem install bundler
          updn$ bundle
 
 * Adjust config/initializers/bitcoin.rb to use the username/password provided in bitcoin.conf.
