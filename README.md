@@ -97,7 +97,7 @@ This has been tested using Ruby 2.1+ on Arch and LMDE installs using SQLite 3. I
          updn$ sudo gem install bundler
          updn$ bundle
 
-* Adjust config/initializers/bitcoin.rb to use the username/password provided in bitcoin.conf.
+* Adjust `config/initializers/bitcoin.rb` to use the username/password provided in bitcoin.conf.
 
 * Create an SQLite 3 (other DBs supported by ActiveRecord may work) database, username, and password and put them in a
 `config/database.yml` file:
