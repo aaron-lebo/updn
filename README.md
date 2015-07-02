@@ -87,7 +87,7 @@ This has been tested using Ruby 2.1 on an arch install using sqlite3. It should 
 
 * Checkout the updn git tree from Github
 
-         $ git clone git://github.com/fisher-lebo/updn.git
+         $ git clone git://github.com/aaron-lebo/updn.git
          $ cd updn
          updn$ 
 
