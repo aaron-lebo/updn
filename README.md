@@ -73,15 +73,15 @@ It should be trivial to use a cryptocurrency other than Bitcoin (the initial ide
 
 ## why aren't you running the site yourself?
 
-With a few days of testing I could probably host the site myself. However, I do not trust my code enough to do this and I have no desire to spend the time required to run a community based site. Finally, I do not want to be responsible for losing someone else's money due to my own incompetence or a hacker's touch.
+With a few days of testing I could probably host the site myself. However, I do not trust my code enough to do this and I have no desire to spend the time required to run a community based site. Finally, I do not want to be responsible for losing someone else's money due to my own incompetence or a hacker.
 
 Consider the above a warning. If this warning does not phase you, I would love to see someone run with the codebase or the idea.
 
 ## installation
 
-This has been tested using Ruby 2.1 on an arch install using sqlite3. It should work fine in other scenarios, but I can't make any promises.
+This has been tested using Ruby 2.1+ on Arch and LMDE installs using SQLite 3. It should work fine in other scenarios, but I can't make any promises.
 
-* Download Bitcoin or bitcoind, enable the server option, supply rpcuser and rpcpassword in [*bitcoin.conf*](https://en.bitcoin.it/wiki/Running_Bitcoin), and adjust *bitcoin.rb* to match. The entire Bitcoin blockchain can take hours to download. The site should still function as long as the daemon is accessible, you simply will not see the most recent transactions until that part of the blockchain has been downloaded.
+* Download Bitcoin or bitcoind and enable the server option and supply rpcuser and rpcpassword in [*bitcoin.conf*](https://en.bitcoin.it/wiki/Running_Bitcoin). The entire Bitcoin blockchain can take hours to download. The site should still function as long as the daemon is accessible, you simply will not see the most recent transactions until that part of the blockchain has been downloaded.
 
 * Install Ruby. Supported Ruby versions include 1.9.3, 2.0.0 and 2.1.0.
 
@@ -89,26 +89,17 @@ This has been tested using Ruby 2.1 on an arch install using sqlite3. It should 
 
          $ git clone git://github.com/aaron-lebo/updn.git
          $ cd updn
-         updn$ 
 
 * Run Bundler to install/bundle gems needed by the project:
 
          updn$ bundle
 
-* Create a MySQL (other DBs supported by ActiveRecord may work, only MySQL and
-MariaDB have been tested) database, username, and password and put them in a
-`config/database.yml` file:
+* Adjust config/initializers/bitcoin.rb to use the username/password provided in bitcoin.conf.
 
-          development:
-            adapter: mysql2
-            encoding: utf8mb4
-            reconnect: false
-            database: updn_dev
-            socket: /tmp/mysql.sock
-            username: *username*
-            password: *password*
+* Create an SQLite 3 (other DBs supported by ActiveRecord may work) database, username, and password and put them in a
+`config/database.yml` file:
             
-          test:
+          development:
             adapter: sqlite3
             database: db/test.sqlite3
             pool: 5
